@@ -1,0 +1,366 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.login-shell {
+  width: min(100%, 980px);
+  min-height: 620px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.05fr);
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.login-brand-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, var(--bg-sidebar), var(--bg-sidebar-soft));
+  color: #ffffff;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-brand-panel .eyebrow-text {
+  color: #9ad7df;
+}
+
+.login-brand-panel h1 {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 2.4rem;
+  line-height: 1.1;
+}
+
+.login-brand-panel p {
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.login-form-panel {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-form-heading {
+  margin-bottom: 1.5rem;
+}
+
+.login-form-heading h2 {
+  margin: 0 0 0.35rem;
+}
+
+.login-form-heading p {
+  color: var(--text-soft);
+  margin: 0;
+}
+
+.login-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.login-link-button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+  padding: 0;
+}
+
+.hero-panel {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.form-page,
+.detail-grid,
+.feedback-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.detail-grid,
+.feedback-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-section {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.detail-section h4,
+.review-form h4,
+.coverage-box__details h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.assignment-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.assignment-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.assignment-toolbar__search,
+.assignment-toolbar__filter {
+  display: grid;
+}
+
+.assignment-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+}
+
+.assignment-card {
+  background: #f9fbff;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.assignment-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.assignment-card__header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.assignment-card__body {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.assignment-card__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.assignment-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 0.9rem;
+}
+
+.assignment-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.question-builder,
+.questionnaire-form,
+.question-answer-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.assignment-type-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.assignment-type-option {
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 1rem;
+  background: #f9fbff;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.assignment-type-option input {
+  margin-top: 0.25rem;
+}
+
+.assignment-type-option span,
+.assignment-type-option small {
+  grid-column: 2;
+}
+
+.assignment-type-option span {
+  font-weight: 700;
+}
+
+.assignment-type-option small {
+  color: var(--text-soft);
+}
+
+.assignment-type-option--active {
+  border-color: rgba(31, 106, 165, 0.45);
+  background: rgba(31, 106, 165, 0.08);
+}
+
+.question-builder__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.question-builder__item,
+.questionnaire-card,
+.question-answer-card {
+  background: #f9fbff;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.questionnaire-card h4,
+.question-answer-card h5 {
+  margin: 0 0 0.5rem;
+}
+
+.question-answer-card__question {
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.assignment-file-link {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.assignment-download {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: #f9fbff;
+  padding: 1rem;
+}
+
+.assignment-download h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.coverage-box {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1rem;
+}
+
+.coverage-box__details {
+  background: #f9fbff;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.coverage-box__details ul {
+  padding-left: 1.2rem;
+}
+
+.cheating-box {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.review-form {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.empty-state {
+  border: 1px dashed var(--border-soft);
+  border-radius: 20px;
+  padding: 1.5rem;
+  background: #fbfdff;
+}
+
+.empty-state h4 {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .login-brand-panel,
+  .login-form-panel {
+    padding: 2rem;
+  }
+
+  .detail-grid,
+  .feedback-layout,
+  .cheating-box,
+  .coverage-box,
+  .assignment-type-selector,
+  .assignment-card__meta,
+  .assignment-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-panel,
+  .assignment-download,
+  .assignment-card__header,
+  .assignment-card__footer,
+  .question-builder__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

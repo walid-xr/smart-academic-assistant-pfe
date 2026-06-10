@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102A43"/>
+      <stop offset="1" stop-color="#133B5C"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#031323" flood-opacity="0.28"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#51C4B8"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="720" rx="34" fill="#E8F1F8"/>
+  <rect x="60" y="52" width="1160" height="616" rx="28" fill="url(#canvas)" filter="url(#shadow)"/>
+  <rect x="60" y="52" width="1160" height="62" rx="28" fill="#071D30"/>
+  <text x="104" y="91" font-family="Aptos, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFFFFF">Workflow n8n - Correction intelligente</text>
+  <text x="1040" y="91" font-family="Aptos, Arial, sans-serif" font-size="15" font-weight="700" fill="#F0B44C">Webhook actif</text>
+
+  <g stroke="#31506B" stroke-width="1">
+    <path d="M100 160 H1180"/>
+    <path d="M100 230 H1180"/>
+    <path d="M100 300 H1180"/>
+    <path d="M100 370 H1180"/>
+    <path d="M100 440 H1180"/>
+    <path d="M100 510 H1180"/>
+    <path d="M100 580 H1180"/>
+    <path d="M160 135 V615"/>
+    <path d="M300 135 V615"/>
+    <path d="M440 135 V615"/>
+    <path d="M580 135 V615"/>
+    <path d="M720 135 V615"/>
+    <path d="M860 135 V615"/>
+    <path d="M1000 135 V615"/>
+    <path d="M1140 135 V615"/>
+  </g>
+
+  <g font-family="Aptos, Arial, sans-serif">
+    <g>
+      <rect x="112" y="198" width="150" height="86" rx="16" fill="#256FA8"/>
+      <text x="187" y="233" text-anchor="middle" font-size="17" font-weight="700" fill="#FFFFFF">Webhook</text>
+      <text x="187" y="259" text-anchor="middle" font-size="13" fill="#DCEBF5">soumission</text>
+    </g>
+    <g>
+      <rect x="315" y="198" width="150" height="86" rx="16" fill="#51C4B8"/>
+      <text x="390" y="233" text-anchor="middle" font-size="17" font-weight="700" fill="#102A43">Normalize</text>
+      <text x="390" y="259" text-anchor="middle" font-size="13" fill="#17324D">payload</text>
+    </g>
+    <g>
+      <rect x="518" y="198" width="150" height="86" rx="16" fill="#F0B44C"/>
+      <text x="593" y="233" text-anchor="middle" font-size="17" font-weight="700" fill="#102A43">Extract PDF</text>
+      <text x="593" y="259" text-anchor="middle" font-size="13" fill="#17324D">texte étudiant</text>
+    </g>
+    <g>
+      <rect x="721" y="198" width="150" height="86" rx="16" fill="#D9524A"/>
+      <text x="796" y="233" text-anchor="middle" font-size="17" font-weight="700" fill="#FFFFFF">Gemini</text>
+      <text x="796" y="259" text-anchor="middle" font-size="13" fill="#FFE4E1">JSON structuré</text>
+    </g>
+    <g>
+      <rect x="924" y="198" width="150" height="86" rx="16" fill="#2E8B57"/>
+      <text x="999" y="233" text-anchor="middle" font-size="17" font-weight="700" fill="#FFFFFF">Callback</text>
+      <text x="999" y="259" text-anchor="middle" font-size="13" fill="#E4F5EB">backend</text>
+    </g>
+
+    <g fill="none" stroke="#51C4B8" stroke-width="5" marker-end="url(#arrow)">
+      <path d="M262 241 H304"/>
+      <path d="M465 241 H507"/>
+      <path d="M668 241 H710"/>
+      <path d="M871 241 H913"/>
+      <path d="M999 284 C999 384 842 418 720 418"/>
+    </g>
+
+    <rect x="222" y="380" width="210" height="72" rx="16" fill="#FFFFFF" fill-opacity="0.96"/>
+    <text x="327" y="410" text-anchor="middle" font-size="16" font-weight="700" fill="#133B5C">Feedback en français</text>
+    <text x="327" y="435" text-anchor="middle" font-size="13" fill="#5F6C7B">score, conseils, questions manquantes</text>
+
+    <rect x="475" y="380" width="210" height="72" rx="16" fill="#FFFFFF" fill-opacity="0.96"/>
+    <text x="580" y="410" text-anchor="middle" font-size="16" font-weight="700" fill="#133B5C">Alertes</text>
+    <text x="580" y="435" text-anchor="middle" font-size="13" fill="#5F6C7B">IA probable, plagiat, revue</text>
+
+    <rect x="728" y="380" width="210" height="72" rx="16" fill="#FFFFFF" fill-opacity="0.96"/>
+    <text x="833" y="410" text-anchor="middle" font-size="16" font-weight="700" fill="#133B5C">Notifications</text>
+    <text x="833" y="435" text-anchor="middle" font-size="13" fill="#5F6C7B">étudiant et enseignant</text>
+
+    <rect x="210" y="520" width="860" height="58" rx="18" fill="#071D30" stroke="#31506B"/>
+    <text x="640" y="556" text-anchor="middle" font-size="18" font-weight="700" fill="#FFFFFF">Sécurité du webhook : header x-n8n-secret</text>
+  </g>
+</svg>

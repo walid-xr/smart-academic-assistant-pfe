@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Smart Academic Assistant logo</title>
+  <desc id="desc">A shield with an open book, graduation cap, check mark, and AI connection nodes.</desc>
+  <defs>
+    <linearGradient id="shield" x1="19" y1="10" x2="109" y2="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#256fa8"/>
+      <stop offset="1" stop-color="#133b5c"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="39" y1="39" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#51c4b8"/>
+      <stop offset="1" stop-color="#f0b44c"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#shield)" d="M64 8 18 25v33c0 29 19 52 46 62 27-10 46-33 46-62V25L64 8Z"/>
+  <path fill="#ffffff" fill-opacity=".12" d="M64 16 27 30v28c0 23 14 42 37 53 23-11 37-30 37-53V30L64 16Z"/>
+  <path fill="#ffffff" d="M36 55c10-5 20-5 28 1v37c-8-6-18-7-28-3V55Zm56 0c-10-5-20-5-28 1v37c8-6 18-7 28-3V55Z"/>
+  <path fill="#dcebf5" d="M64 56c8-6 18-6 28-1v8c-10-5-20-4-28 2v-9Zm0 18c8-6 18-7 28-3v7c-10-4-20-3-28 3v-7ZM36 55c10-5 20-5 28 1v9c-8-6-18-7-28-2v-8Zm0 16c10-4 20-3 28 3v7c-8-6-18-7-28-3v-7Z"/>
+  <path fill="#17324d" d="m30 43 34-15 34 15-34 15-34-15Z"/>
+  <path fill="#f0b44c" d="M93 47h5v21h-5z"/>
+  <circle cx="95.5" cy="72" r="5.5" fill="#f0b44c"/>
+  <path fill="url(#accent)" d="m57 85-10-10 6-6 5 5 17-18 6 6-24 23Z"/>
+  <circle cx="33" cy="37" r="5" fill="#51c4b8"/>
+  <circle cx="95" cy="37" r="5" fill="#51c4b8"/>
+  <circle cx="64" cy="24" r="4" fill="#f0b44c"/>
+  <path fill="none" stroke="#51c4b8" stroke-linecap="round" stroke-width="3" d="M38 37h17m35 0H73M64 28v10"/>
+</svg>

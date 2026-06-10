@@ -1,0 +1,577 @@
+{
+  "name": "SAA - Combined Advanced Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smart-academic-assistant",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-submission",
+      "name": "Homework Submission Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst payload = input.body && Object.keys(input.body).length ? input.body : input;\n\nreturn [\n  {\n    json: {\n      submissionId: payload.submissionId,\n      title: payload.title || 'Devoir sans titre',\n      subject: payload.subject || 'General',\n      content: payload.content || '',\n      fileUrl: payload.fileUrl || '',\n      filePath: payload.filePath || '',\n      submissionDate: payload.submissionDate || new Date().toISOString(),\n      plagiarismPercentage: Number(payload.plagiarismPercentage || 0),\n      studentId: payload.student?.id || null,\n      studentName: payload.student?.name || 'Etudiant',\n      studentEmail: payload.student?.email || 'student@example.com',\n      className: payload.student?.className || '',\n      teacherEmail: 'teacher@example.com',\n      feedbackLanguage: payload.feedbackLanguage || payload.evaluationLanguage || 'fr',\n      evaluationLanguage: payload.evaluationLanguage || payload.feedbackLanguage || 'fr',\n      feedbackInstructions:\n        payload.feedbackInstructions ||\n        'Return all student-facing evaluation text in French. Use simple, clear, helpful French for a student.',\n      confirmationSubject: `Devoir recu - ${payload.title || 'Devoir'}`,\n      confirmationText: `Bonjour ${payload.student?.name || 'Etudiant'},\\n\\nVotre devoir \\\"${payload.title || 'Devoir'}\\\" a ete recu avec succes.\\nMatiere : ${payload.subject || 'General'}\\nID de soumission : ${payload.submissionId || ''}\\n\\nVotre devoir will now be analyzed automatically.`,\n      confirmationHtml: `<p>Bonjour <strong>${payload.student?.name || 'Etudiant'}</strong>,</p><p>Votre devoir <strong>${payload.title || 'Devoir'}</strong> a ete recu avec succes.</p><p><strong>Matiere :</strong> ${payload.subject || 'General'}<br><strong>ID de soumission :</strong> ${payload.submissionId || ''}</p><p>Votre devoir will now be analyzed automatically.</p>`\n    }\n  }\n];"
+      },
+      "id": "code-normalize-submission",
+      "name": "Normalize Submission",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "onError": "continueRegularOutput",
+      "position": [
+        420,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "teacher@example.com",
+        "toEmail": "={{ $json.studentEmail }}",
+        "subject": "={{ $json.confirmationSubject }}",
+        "emailFormat": "both",
+        "text": "={{ $json.confirmationText }}",
+        "html": "={{ $json.confirmationHtml }}",
+        "options": {}
+      },
+      "id": "email-send-confirmation",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "onError": "continueRegularOutput",
+      "position": [
+        700,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$json.fileUrl }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-has-pdf",
+      "name": "Has PDF File?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        700,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileUrl }}",
+        "method": "GET",
+        "responseFormat": "file",
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "id": "http-download-pdf",
+      "name": "Download PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        940,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {
+          "joinPages": true
+        }
+      },
+      "id": "extract-text-from-pdf",
+      "name": "Extract Text From PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Normalize Submission').first().json;\nconst pdfText = $input.first().json.text || '';\nconst languageLabel = base.feedbackLanguage === 'fr' || base.evaluationLanguage === 'fr' ? 'French' : (base.feedbackLanguage || base.evaluationLanguage || 'French');\nconst feedbackInstructions =\n  base.feedbackInstructions ||\n  'Return all student-facing evaluation text in French. Use simple, clear, helpful French for a student.';\nconst prompt = `You are an academic evaluator for a university homework platform. Analyze the homework below and return only valid JSON.\\n\\nEvaluation rules:\\n- score, grammar_score, structure_score, content_score: numbers from 0 to 20\\n- ai_probability: number from 0 to 100\\n- feedback: short but useful feedback for a student, written in ${languageLabel}\\n- key_strengths: array of 2 to 4 short points, written in ${languageLabel}\\n- improvement_tips: array of 2 to 4 short actionable tips, written in ${languageLabel}\\n- missing_questions: when used, write each note in ${languageLabel}\\n- recommended_teacher_action: one of [\"approve\", \"review\", \"investigate\"]\\n\\nLanguage rules:\\n- ${feedbackInstructions}\\n- Do not write feedback, strengths, tips, or missing question notes in English. Keep only the JSON keys and enum values in English.\\n\\nContext:\\nTitle: ${base.title}\\nSubject: ${base.subject}\\nStudent: ${base.studentName}\\nClass: ${base.className}\\nSubmission type: PDF\\n\\nTexte du devoir :\\n${pdfText}`;\n\nreturn [\n  {\n    json: {\n      ...base,\n      extractedText: pdfText,\n      geminiRequestBody: {\n        contents: [\n          {\n            parts: [\n              {\n                text: prompt\n              }\n            ]\n          }\n        ],\n        generationConfig: {\n          responseMimeType: 'application/json',\n          responseJsonSchema: {\n            type: 'object',\n            properties: {\n              score: { type: 'number', minimum: 0, maximum: 20, description: 'Global score over 20.' },\n              feedback: { type: 'string', description: 'Clear student feedback in French in 2 to 5 sentences.' },\n              grammar_score: { type: 'number', minimum: 0, maximum: 20 },\n              structure_score: { type: 'number', minimum: 0, maximum: 20 },\n              content_score: { type: 'number', minimum: 0, maximum: 20 },\n              ai_probability: { type: 'number', minimum: 0, maximum: 100 },\n              key_strengths: { type: 'array', items: { type: 'string', description: 'French text.' }, minItems: 2, maxItems: 4 },\n              improvement_tips: { type: 'array', items: { type: 'string', description: 'French text.' }, minItems: 2, maxItems: 4 },\n              recommended_teacher_action: {\n                type: 'string',\n                enum: ['approve', 'review', 'investigate']\n              }\n            },\n            required: [\n              'score',\n              'feedback',\n              'grammar_score',\n              'structure_score',\n              'content_score',\n              'ai_probability',\n              'key_strengths',\n              'improvement_tips',\n              'recommended_teacher_action'\n            ]\n          }\n        }\n      }\n    }\n  }\n];"
+      },
+      "id": "code-prepare-pdf-analysis",
+      "name": "Prepare Gemini Input From PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $input.first().json;\nconst languageLabel = base.feedbackLanguage === 'fr' || base.evaluationLanguage === 'fr' ? 'French' : (base.feedbackLanguage || base.evaluationLanguage || 'French');\nconst feedbackInstructions =\n  base.feedbackInstructions ||\n  'Return all student-facing evaluation text in French. Use simple, clear, helpful French for a student.';\nconst prompt = `You are an academic evaluator for a university homework platform. Analyze the homework below and return only valid JSON.\\n\\nEvaluation rules:\\n- score, grammar_score, structure_score, content_score: numbers from 0 to 20\\n- ai_probability: number from 0 to 100\\n- feedback: short but useful feedback for a student, written in ${languageLabel}\\n- key_strengths: array of 2 to 4 short points, written in ${languageLabel}\\n- improvement_tips: array of 2 to 4 short actionable tips, written in ${languageLabel}\\n- missing_questions: when used, write each note in ${languageLabel}\\n- recommended_teacher_action: one of [\"approve\", \"review\", \"investigate\"]\\n\\nLanguage rules:\\n- ${feedbackInstructions}\\n- Do not write feedback, strengths, tips, or missing question notes in English. Keep only the JSON keys and enum values in English.\\n\\nContext:\\nTitle: ${base.title}\\nSubject: ${base.subject}\\nStudent: ${base.studentName}\\nClass: ${base.className}\\nSubmission type: Text\\n\\nTexte du devoir :\\n${base.content}`;\n\nreturn [\n  {\n    json: {\n      ...base,\n      extractedText: base.content,\n      geminiRequestBody: {\n        contents: [\n          {\n            parts: [\n              {\n                text: prompt\n              }\n            ]\n          }\n        ],\n        generationConfig: {\n          responseMimeType: 'application/json',\n          responseJsonSchema: {\n            type: 'object',\n            properties: {\n              score: { type: 'number', minimum: 0, maximum: 20, description: 'Global score over 20.' },\n              feedback: { type: 'string', description: 'Clear student feedback in French in 2 to 5 sentences.' },\n              grammar_score: { type: 'number', minimum: 0, maximum: 20 },\n              structure_score: { type: 'number', minimum: 0, maximum: 20 },\n              content_score: { type: 'number', minimum: 0, maximum: 20 },\n              ai_probability: { type: 'number', minimum: 0, maximum: 100 },\n              key_strengths: { type: 'array', items: { type: 'string', description: 'French text.' }, minItems: 2, maxItems: 4 },\n              improvement_tips: { type: 'array', items: { type: 'string', description: 'French text.' }, minItems: 2, maxItems: 4 },\n              recommended_teacher_action: {\n                type: 'string',\n                enum: ['approve', 'review', 'investigate']\n              }\n            },\n            required: [\n              'score',\n              'feedback',\n              'grammar_score',\n              'structure_score',\n              'content_score',\n              'ai_probability',\n              'key_strengths',\n              'improvement_tips',\n              'recommended_teacher_action'\n            ]\n          }\n        }\n      }\n    }\n  }\n];"
+      },
+      "id": "code-prepare-text-analysis",
+      "name": "Prepare Gemini Input From Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "YOUR_GEMINI_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.geminiRequestBody) }}",
+        "options": {}
+      },
+      "id": "http-gemini-analysis",
+      "name": "Gemini Structured Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nconst parsed = JSON.parse(String(raw).trim());\nconst source = $('Prepare Gemini Input From PDF').all().length\n  ? $('Prepare Gemini Input From PDF').first().json\n  : $('Prepare Gemini Input From Text').first().json;\n\nreturn [\n  {\n    json: {\n      ...source,\n      analysis: parsed\n    }\n  }\n];"
+      },
+      "id": "code-parse-gemini-result",
+      "name": "Parse Gemini Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst analysis = item.analysis || {};\nconst plagiarism = Number(item.plagiarismPercentage || 0);\nconst aiProbability = Number(analysis.ai_probability || 0);\nconst cheatingFlag = aiProbability >= 70 || plagiarism >= 60;\nconst strengths = Array.isArray(analysis.key_strengths) ? analysis.key_strengths : [];\nconst tips = Array.isArray(analysis.improvement_tips) ? analysis.improvement_tips : [];\n\nreturn [\n  {\n    json: {\n      submission_id: item.submissionId,\n      score: Number(analysis.score || 0),\n      feedback: analysis.feedback || '',\n      grammar_score: Number(analysis.grammar_score || 0),\n      structure_score: Number(analysis.structure_score || 0),\n      content_score: Number(analysis.content_score || 0),\n      ai_probability: aiProbability,\n      plagiarism_percentage: plagiarism,\n      cheating_flag: cheatingFlag,\n      title: item.title,\n      subject: item.subject,\n      studentName: item.studentName,\n      studentEmail: item.studentEmail,\n      teacherEmail: item.teacherEmail,\n      key_strengths: strengths,\n      improvement_tips: tips,\n      recommended_teacher_action: analysis.recommended_teacher_action || 'review',\n      resultSubject: `Resultat du devoir - ${item.title}`,\n      resultText: `Bonjour ${item.studentName},\\n\\nVotre devoir \\\"${item.title}\\\" a ete analyse.\\n\\nNote : ${Number(analysis.score || 0)} / 20\\nGrammaire : ${Number(analysis.grammar_score || 0)} / 20\\nStructure : ${Number(analysis.structure_score || 0)} / 20\\nContenu : ${Number(analysis.content_score || 0)} / 20\\nProbabilite IA : ${aiProbability}%\\nPourcentage de plagiat : ${plagiarism}%\\n\\nFeedback :\\n${analysis.feedback || ''}\\n\\nPoints forts :\\n- ${strengths.join('\\n- ')}\\n\\nConseils d amelioration :\\n- ${tips.join('\\n- ')}`,\n      resultHtml: `<p>Bonjour <strong>${item.studentName}</strong>,</p><p>Votre devoir <strong>${item.title}</strong> a ete analyse.</p><p><strong>Note :</strong> ${Number(analysis.score || 0)} / 20<br><strong>Grammaire :</strong> ${Number(analysis.grammar_score || 0)} / 20<br><strong>Structure :</strong> ${Number(analysis.structure_score || 0)} / 20<br><strong>Contenu :</strong> ${Number(analysis.content_score || 0)} / 20<br><strong>Probabilite IA :</strong> ${aiProbability}%<br><strong>Pourcentage de plagiat :</strong> ${plagiarism}%</p><p><strong>Feedback :</strong><br>${analysis.feedback || ''}</p><p><strong>Points forts :</strong></p><ul>${strengths.map((item) => `<li>${item}</li>`).join('')}</ul><p><strong>Conseils d amelioration :</strong></p><ul>${tips.map((item) => `<li>${item}</li>`).join('')}</ul>`,\n      alertSubject: `Alerte de triche - ${item.title}`,\n      alertText: `Alerte enseignant:\\n\\nUne soumission a ete signalee.\\n\\nEtudiant : ${item.studentName}\\nMatiere : ${item.subject}\\nDevoir : ${item.title}\\nProbabilite IA : ${aiProbability}%\\nPourcentage de plagiat : ${plagiarism}%\\nAction recommandee : ${analysis.recommended_teacher_action || 'review'}`,\n      alertHtml: `<p><strong>Alerte enseignant</strong></p><p>Une soumission a ete signalee.</p><p><strong>Etudiant :</strong> ${item.studentName}<br><strong>Matiere :</strong> ${item.subject}<br><strong>Devoir :</strong> ${item.title}<br><strong>Probabilite IA :</strong> ${aiProbability}%<br><strong>Pourcentage de plagiat :</strong> ${plagiarism}%<br><strong>Action recommandee :</strong> ${analysis.recommended_teacher_action || 'review'}</p>`\n    }\n  }\n];"
+      },
+      "id": "code-compose-final-result",
+      "name": "Compose Final Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/webhooks/n8n/analysis-result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-n8n-secret",
+              "value": "my_n8n_shared_secret"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ submission_id: $json.submission_id, score: $json.score, feedback: $json.feedback, grammar_score: $json.grammar_score, structure_score: $json.structure_score, content_score: $json.content_score, ai_probability: $json.ai_probability, plagiarism_percentage: $json.plagiarism_percentage }) }}",
+        "options": {}
+      },
+      "id": "http-save-analysis-backend",
+      "name": "Save Analysis In Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: $('Compose Final Result').first().json\n  }\n];"
+      },
+      "id": "code-post-save-data",
+      "name": "Reload Result Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2740,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "teacher@example.com",
+        "toEmail": "={{ $json.studentEmail }}",
+        "subject": "={{ $json.resultSubject }}",
+        "emailFormat": "both",
+        "text": "={{ $json.resultText }}",
+        "html": "={{ $json.resultHtml }}",
+        "options": {}
+      },
+      "id": "email-send-result",
+      "name": "Send Result Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "onError": "continueRegularOutput",
+      "position": [
+        3000,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$json.cheating_flag }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-cheating-flag",
+      "name": "Cheating Flagged?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "teacher@example.com",
+        "toEmail": "={{ $json.teacherEmail }}",
+        "subject": "={{ $json.alertSubject }}",
+        "emailFormat": "both",
+        "text": "={{ $json.alertText }}",
+        "html": "={{ $json.alertHtml }}",
+        "options": {}
+      },
+      "id": "email-send-alert",
+      "name": "Send Cheating Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "onError": "continueRegularOutput",
+      "position": [
+        3260,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "schedule-weekly",
+      "name": "Weekly Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:5000/api/webhooks/n8n/weekly-report-data",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-n8n-secret",
+              "value": "my_n8n_shared_secret"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-get-weekly-report",
+      "name": "Get Weekly Report Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const report = $input.first().json;\nconst overview = report.overview || {};\nconst flaggedRows = Array.isArray(report.flagged_submissions) ? report.flagged_submissions : [];\nconst flaggedText = flaggedRows.length\n  ? flaggedRows.map((row, index) => `${index + 1}. ${row.student_name} - ${row.title} (${row.subject}) | score: ${row.score ?? '-'} | ai: ${row.ai_probability ?? 0}% | plagiarism: ${row.plagiarism_percentage ?? 0}%`).join('\\n')\n  : 'No flagged homework this week.';\nconst flaggedHtml = flaggedRows.length\n  ? `<ul>${flaggedRows.map((row) => `<li><strong>${row.student_name}</strong> - ${row.title} (${row.subject}) | score: ${row.score ?? '-'} | ai: ${row.ai_probability ?? 0}% | plagiarism: ${row.plagiarism_percentage ?? 0}%</li>`).join('')}</ul>`\n  : '<p>No flagged homework this week.</p>';\n\nreturn [\n  {\n    json: {\n      toEmail: 'teacher@example.com',\n      fromEmail: 'teacher@example.com',\n      subject: 'Weekly homework summary',\n      text: `Weekly Teacher Summary\\n\\nPeriod: ${report.period || 'Last 7 days'}\\nTotal submissions: ${overview.total_submissions ?? 0}\\nAverage score: ${overview.average_score ?? 0}\\nFlagged homework: ${overview.flagged_homework ?? 0}\\nGenerated at: ${report.generated_at || ''}\\n\\nFlagged list:\\n${flaggedText}`,\n      html: `<p><strong>Weekly Teacher Summary</strong></p><p><strong>Period:</strong> ${report.period || 'Last 7 days'}<br><strong>Total submissions:</strong> ${overview.total_submissions ?? 0}<br><strong>Average score:</strong> ${overview.average_score ?? 0}<br><strong>Flagged homework:</strong> ${overview.flagged_homework ?? 0}<br><strong>Generated at:</strong> ${report.generated_at || ''}</p><p><strong>Flagged list</strong></p>${flaggedHtml}`\n    }\n  }\n];"
+      },
+      "id": "code-format-weekly-email",
+      "name": "Format Weekly Summary Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "onError": "continueRegularOutput",
+      "position": [
+        700,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.toEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "both",
+        "text": "={{ $json.text }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "email-send-weekly",
+      "name": "Send Weekly Summary Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "onError": "continueRegularOutput",
+      "position": [
+        960,
+        620
+      ]
+    }
+  ],
+  "connections": {
+    "Homework Submission Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Submission": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has PDF File?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has PDF File?": {
+      "main": [
+        [
+          {
+            "node": "Download PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Gemini Input From Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract Text From PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text From PDF": {
+      "main": [
+        [
+          {
+            "node": "Prepare Gemini Input From PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Gemini Input From PDF": {
+      "main": [
+        [
+          {
+            "node": "Gemini Structured Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Gemini Input From Text": {
+      "main": [
+        [
+          {
+            "node": "Gemini Structured Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Structured Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse Gemini Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Gemini Result": {
+      "main": [
+        [
+          {
+            "node": "Compose Final Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Final Result": {
+      "main": [
+        [
+          {
+            "node": "Save Analysis In Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Analysis In Backend": {
+      "main": [
+        [
+          {
+            "node": "Reload Result Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reload Result Data": {
+      "main": [
+        [
+          {
+            "node": "Send Result Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Cheating Flagged?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cheating Flagged?": {
+      "main": [
+        [
+          {
+            "node": "Send Cheating Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Weekly Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Weekly Report Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weekly Report Data": {
+      "main": [
+        [
+          {
+            "node": "Format Weekly Summary Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Weekly Summary Email": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Summary Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "pinData": {},
+  "meta": {
+    "templateType": "combined-advanced"
+  }
+}
