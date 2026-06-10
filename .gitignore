@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+backend/.env
+frontend/.env
+uploads/homework/*
+!uploads/homework/.gitkeep
+uploads/assignments/*
+!uploads/assignments/.gitkeep
